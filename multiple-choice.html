@@ -1,15 +1,16 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../materializecss-styles/materializecss-styles.html">
 <link rel="import" href="../hax-body-behaviors/hax-body-behaviors.html">
 <link rel="import" href="../schema-behaviors/schema-behaviors.html">
 <!--
 `multiple-choice`
-A LRN element
+Ask the user a question from a set of possible answers.
 
 @demo demo/index.html
 
 @microcopy - the mental model for this element
- -
  -
 
 -->
@@ -20,8 +21,22 @@ A LRN element
       :host {
         display: block;
       }
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
     </style>
-    <h2>[[title]]</h2>
+    <meta property="oer:assessing" content$="[[relatedResource]]" />
+    <h3 hidden$="[[hideTitle]]"><span property="oer:name">[[title]]</span></h3>
+    <div>[[question]]</div>
+    <ul>
+      <template is="dom-repeat" items="[[displayedAnswers]]" as="answer">
+        <li><paper-radio-button property="oer:answer" checked="{{answer.userGuess}}">[[answer.label]]</paper-radio-button></span></li>
+      </template>
+    </ul>
+    <paper-button raised on-tap="_verifyAnswers">[[checkLabel]]</paper-button>
+    </div>
   </template>
 
   <script>
@@ -29,37 +44,170 @@ A LRN element
 
       is: 'multiple-choice',
       behaviors: [HAXBehaviors.PropertiesBehaviors, MaterializeCSSBehaviors.ColorBehaviors, SchemaBehaviors.Schema],
+      observers: [
+        '_answersChanged(answers.*)'
+      ],
       properties: {
         /**
          * Title
          */
         title: {
           type: String,
+          value: '',
         },
+        /**
+         * Text of the label to check your answer
+         */
+        checkLabel: {
+          type: String,
+          value: 'Check answer',
+        },
+        /**
+         * Related Resource ID
+         */
+        relatedResource: {
+          type: String,
+        },
+        /**
+         * Flag to hide the title
+         */
+        hideTitle: {
+          type: Boolean,
+          value: false,
+          reflectToAttribute: true,
+        },
+        /**
+         * Question to ask
+         */
+        question: {
+          type: String,
+          value: '',
+        },
+        /**
+         * Array of possible answers
+         */
+        answers: {
+          type: Array,
+          value: [],
+          notify: true,
+        },
+        /**
+         * Displayed Answer set.
+         */
+        displayedAnswers: {
+          type: Array,
+          computed: '_computeDisplayedAnswers(answers, randomize)',
+          notify: true,
+        },
+        /**
+         * Correct answer text to display
+         */
+        correct: {
+          type: String,
+          value: 'Great job!',
+        },
+        /**
+         * Incorrect answer text to display
+         */
+        incorrect: {
+          type: String,
+          value: 'Better luck next time!',
+        },
+        /**
+         * Randomize the display of the answers
+         */
+        randomize: {
+          type: Boolean,
+          value: true,
+        },
+      },
+      /**
+       * Verify the answers of the user based on their saying
+       * that they want to see how they did.
+       */
+      _verifyAnswers: function(e) {
+        var normalizedEvent = Polymer.dom(e);
+        var local = normalizedEvent.localTarget;
+        let gotRight = true;
+        // see that they got them all right
+        for (var i in this.displayedAnswers) {
+          if (gotRight != false && this.displayedAnswers[i].correct && this.displayedAnswers[i].userGuess) {
+            gotRight = true;
+            console.log('You got this one: ' + this.displayedAnswers[i].label);
+          }
+          else if (this.displayedAnswers[i].correct && !this.displayedAnswers[i].userGuess) {
+            console.log('You missed this one' + this.displayedAnswers[i].label);
+            gotRight = false;
+          }
+          else if (!this.displayedAnswers[i].correct && this.displayedAnswers[i].userGuess) {
+            console.log('This one is not correct' + this.displayedAnswers[i].label);
+            gotRight = false;
+          }
+        }
+        // see if they got this correct based on their answers
+        if (gotRight) {
+          alert(this.correct);
+        }
+        else {
+          alert(this.incorrect);
+        }
+      },
+      /**
+       * Notice an answer has changed and update the DOM.
+       */
+       _answersChanged: function(e) {
+        for (var i in e.base) {
+          for (var j in e.base[i]) {
+            this.notifyPath('tasks.' + i + '.' + j);
+          }
+        }
+      },
+      /**
+       * Figure out the order of the answers which will be displayed
+       */
+      _computeDisplayedAnswers: function(answers, randomize) {
+        if (typeof answers !== typeof undefined && answers != null && answers.length > 0 && randomize) {
+          let random = answers;
+          var currentIndex = random.length, temporaryValue, randomIndex;
+          // While there remain elements to shuffle...
+          while (0 !== currentIndex) {
+            // Pick a remaining element...
+            randomIndex = Math.floor(Math.random() * currentIndex);
+            currentIndex -= 1;
+            // And swap it with the current element.
+            temporaryValue = random[currentIndex];
+            random[currentIndex] = random[randomIndex];
+            random[randomIndex] = temporaryValue;
+          }
+          // @todo apply a random sort to the answers array
+          return random;
+        }
+        else {
+          return answers;
+        }
       },
       /**
        * Attached to the DOM, now fire.
        */
       attached: function() {
+        // set typeof to supporting material
+        this.setAttribute('typeof', 'oer:Assessment');
+
         // Establish hax property binding
         let props = {
           'canScale': true,
           'canPosition': true,
           'canEditSource': false,
           'gizmo': {
-            'title': 'Sample gizmo',
-            'description': 'The user will be able to see this for selection in a UI.',
-            'icon': 'av:play-circle-filled',
-            'color': 'grey',
-            'groups': ['Video', 'Media'],
+            'title': 'Multiple choice',
+            'description': 'Multiple choice self check',
+            'icon': 'icons:list',
+            'color': 'purple',
+            'groups': ['Instructional'],
             'handles': [
-              {
-                'type': 'video',
-                'url': 'source'
-              }
             ],
             'meta': {
-              'author': 'Your organization on github'
+              'author': 'LRNWebComponents'
             }
           },
           'settings': {
@@ -79,6 +227,22 @@ A LRN element
                 'description': 'The title of the element',
                 'inputMethod': 'textfield',
                 'icon': 'editor:title',
+              },
+              {
+                'property': 'answers',
+                'title': 'Answers',
+                'description': 'Answers in a multiple choice',
+                'inputMethod': 'array',
+                'items': {
+                  "correct": {
+                    "title": "Correct",
+                    "type": "boolean"
+                  },
+                  "label": {
+                    "title": "Answer",
+                    "type": "string"
+                  }
+                }
               },
             ],
             'advanced': [
