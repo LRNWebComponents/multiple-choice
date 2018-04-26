@@ -1,5 +1,5 @@
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../paper-radio-button/paper-radio-button.html">
+<link rel="import" href="../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-toast/paper-toast.html">
@@ -24,6 +24,9 @@ Ask the user a question from a set of possible answers.
         display: block;
         padding: 16px 16px 54px 16px;
       }
+      h3 {
+        margin: 8px;
+      }
       ul {
         list-style: none;
         padding: 0;
@@ -41,7 +44,7 @@ Ask the user a question from a set of possible answers.
     <div>[[question]]</div>
     <ul>
       <template is="dom-repeat" items="[[displayedAnswers]]" as="answer">
-        <li><paper-radio-button property="oer:answer" checked="{{answer.userGuess}}">[[answer.label]]</paper-radio-button></span></li>
+        <li><paper-checkbox property="oer:answer" checked="{{answer.userGuess}}">[[answer.label]]</paper-checkbox></span></li>
       </template>
     </ul>
     <paper-button raised on-tap="_verifyAnswers">[[checkLabel]]</paper-button>
@@ -122,14 +125,14 @@ Ask the user a question from a set of possible answers.
         /**
          * Correct answer text to display
          */
-        correct: {
+        correctText: {
           type: String,
           value: 'Great job!',
         },
         /**
          * Incorrect answer text to display
          */
-        incorrect: {
+        incorrectText: {
           type: String,
           value: 'Better luck next time!',
         },
@@ -181,14 +184,14 @@ Ask the user a question from a set of possible answers.
           this.$.toast.hide();
           this.__toastColor = 'green darken-4';
           this.__toastIcon = 'thumb-up';
-          this.__toastText = this.correct;
+          this.__toastText = this.correctText;
           this.$.toast.show();
         }
         else {
           this.$.toast.hide();
           this.__toastColor = 'red darken-4';
           this.__toastIcon = 'thumb-down';
-          this.__toastText = this.incorrect;
+          this.__toastText = this.incorrectText;
           this.$.toast.show();
         }
       },
@@ -267,11 +270,16 @@ Ask the user a question from a set of possible answers.
                 'title': 'Title',
                 'description': 'The title of the element',
                 'inputMethod': 'textfield',
-                'icon': 'editor:title',
+              },
+              {
+                'property': 'randomize',
+                'title': 'Randomize',
+                'description': 'Randomize the answers dynamically',
+                'inputMethod': 'boolean',
               },
               {
                 'property': 'answers',
-                'title': 'Answers',
+                'title': 'Answer set',
                 'description': 'Answers in a multiple choice',
                 'inputMethod': 'array',
                 'items': {
@@ -285,8 +293,32 @@ Ask the user a question from a set of possible answers.
                   }
                 }
               },
+              {
+                'property': 'correctText',
+                'title': 'Correct feedback',
+                'description': 'Feedback when they get it right',
+                'inputMethod': 'textfield',
+              },
+              {
+                'property': 'incorrectText',
+                'title': 'Incorrect feedback',
+                'description': 'Feedback when they get it wrong',
+                'inputMethod': 'textfield',
+              },
             ],
             'advanced': [
+              {
+                'property': 'checkLabel',
+                'title': 'Check answers label',
+                'description': 'Label for getting solution feedback',
+                'inputMethod': 'textfield',
+              },
+              {
+                'property': 'resetLabel',
+                'title': 'Reset label',
+                'description': 'label for the reset button',
+                'inputMethod': 'textfield',
+              },
             ]
           }
         };
